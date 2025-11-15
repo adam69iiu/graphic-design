@@ -36,6 +36,26 @@
             flex-wrap: wrap;
             justify-content: center;
         }
+        .back-link {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(15, 52, 96, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(15, 52, 96, 0.4);
+        }
+        .back-link:active {
+            transform: translateY(0);
+        }
         button {
             padding: 12px 24px;
             font-size: 16px;
@@ -93,6 +113,7 @@
         <canvas id="canvas3d"></canvas>
         <div class="controls">
             <button onclick="downloadImage()">Download PNG (2560×1440)</button>
+            <a href="index.html" class="back-link">← Back to Home page</a>
         </div>
         <div class="info">
             <h3>3D Illuminated Pyramid Scene</h3>
