@@ -80,84 +80,56 @@
     gl.linkProgram(program);
     gl.useProgram(program);
 
-    // -------- Geometry (15 colorful triangles - meets 12+ requirement) --------
+    // -------- Geometry: Sierpiński Triangle (Finite version with color per level) --------
+    // This creates a Sierpiński triangle fractal using recursive subdivision
     // Format: x, y,   r, g, b
-    const data = new Float32Array([
-      // Triangle 1
-      -0.8, 0.7,  1,0,0,
-      -0.6, 0.9,  1,1,0,
-      -0.4, 0.7,  1,0,1,
-
-      // Triangle 2
-      -0.4, 0.3,  0,1,1,
-      -0.2, 0.5,  0,1,0,
-      0.0, 0.3,   1,1,1,
-
-      // Triangle 3
-      0.2, 0.2,   1,0,0,
-      0.4, 0.4,   0,0,1,
-      0.6, 0.2,   0,1,0,
-
-      // Triangle 4
-      0.1,-0.2,  1,0.5,0,
-      0.3, 0.0,  1,1,0,
-      0.5,-0.2,  1,0,1,
-
-      // Triangle 5
-      -0.6,-0.2, 0,1,1,
-      -0.4, 0.0, 0.6,0,1,
-      -0.2,-0.2, 1,0,0.4,
-
-      // Triangle 6
-      -0.8,-0.6, 1,0,0,
-      -0.6,-0.4, 0,1,0,
-      -0.4,-0.6, 0,0,1,
-
-      // Triangle 7 - Additional triangles to meet 12+ requirement
-      0.6, 0.6,  1,0.5,0,
-      0.8, 0.8,  0,1,0.5,
-      1.0, 0.6,  0.5,0,1,
-
-      // Triangle 8
-      -1.0, 0.5,  0,0.5,1,
-      -0.9, 0.7,  1,0,0.5,
-      -0.8, 0.5,  0.5,1,0,
-
-      // Triangle 9
-      0.7, 0.0,  1,1,0.5,
-      0.9, 0.2,  0.5,1,1,
-      1.0, 0.0,  1,0.5,1,
-
-      // Triangle 10
-      -0.2, -0.4,  0.8,0.2,0.2,
-      -0.1, -0.2,  0.2,0.8,0.2,
-      0.0, -0.4,  0.2,0.2,0.8,
-
-      // Triangle 11
-      0.2, -0.6,  1,0.8,0,
-      0.4, -0.4,  0,1,0.8,
-      0.6, -0.6,  0.8,0,1,
-
-      // Triangle 12
-      -0.4, -0.8,  0.6,0.6,0,
-      -0.2, -0.6,  0,0.6,0.6,
-      0.0, -0.8,  0.6,0,0.6,
-
-      // Triangle 13
-      0.8, -0.2,  1,0,0.8,
-      0.9, 0.0,  0.8,1,0,
-      1.0, -0.2,  0,0.8,1,
-
-      // Triangle 14
-      -0.6, 0.1,  0.4,0.4,1,
-      -0.5, 0.3,  1,0.4,0.4,
-      -0.4, 0.1,  0.4,1,0.4,
-
-      // Triangle 15
-      0.3, 0.8,  1,0.3,0.3,
-      0.5, 1.0,  0.3,1,0.3,
-      0.7, 0.8,  0.3,0.3,1,
-    ]);
+    
+    // Recursive function to generate Sierpiński triangle
+    function createSierpinskiTriangle(x1, y1, x2, y2, x3, y3, level, maxLevel, vertices) {
+      if (level >= maxLevel) {
+        // Base case: add triangle with color based on level
+        let r, g, b;
+        if (level === 0) {
+          r = 1.0; g = 0.2; b = 0.2;  // Red
+        } else if (level === 1) {
+          r = 1.0; g = 1.0; b = 0.2;  // Yellow
+        } else if (level === 2) {
+          r = 0.2; g = 1.0; b = 0.2;  // Green
+        } else if (level === 3) {
+          r = 0.2; g = 1.0; b = 1.0;  // Cyan
+        } else {
+          r = 0.2; g = 0.4; b = 1.0;  // Blue
+        }
+        
+        // Add triangle vertices with colors
+        vertices.push(x1, y1, r, g, b);
+        vertices.push(x2, y2, r, g, b);
+        vertices.push(x3, y3, r, g, b);
+        return;
+      }
+      
+      // Recursive case: divide triangle into 3 smaller triangles
+      const mx1 = (x1 + x2) / 2;
+      const my1 = (y1 + y2) / 2;
+      const mx2 = (x2 + x3) / 2;
+      const my2 = (y2 + y3) / 2;
+      const mx3 = (x3 + x1) / 2;
+      const my3 = (y3 + y1) / 2;
+      
+      createSierpinskiTriangle(x1, y1, mx1, my1, mx3, my3, level + 1, maxLevel, vertices);
+      createSierpinskiTriangle(mx1, my1, x2, y2, mx2, my2, level + 1, maxLevel, vertices);
+      createSierpinskiTriangle(mx3, my3, mx2, my2, x3, y3, level + 1, maxLevel, vertices);
+    }
+    
+    // Generate Sierpiński triangle with 3 levels (creates 13 triangles: 1 + 3 + 9)
+    const vertices = [];
+    const x1 = 0.0, y1 = 0.9;   // Top vertex
+    const x2 = -0.8, y2 = -0.7;  // Bottom left
+    const x3 = 0.8, y3 = -0.7;   // Bottom right
+    
+    createSierpinskiTriangle(x1, y1, x2, y2, x3, y3, 0, 3, vertices);
+    
+    const data = new Float32Array(vertices);
 
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -175,7 +147,11 @@
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 45); // 15 triangles * 3 vertices = 45
+    // Draw all triangles in a single drawArrays call
+    // 13 triangles * 3 vertices = 39 vertices
+    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 5);
+    
+    console.log("Sierpiński Triangle: " + (vertices.length / 15) + " triangles, " + (vertices.length / 5) + " vertices");
 
     // Make canvas responsive - scale to fit screen while maintaining aspect ratio
     function resizeCanvas() {
