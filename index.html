@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 70vh;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    ">
+        <h1 style="color: #e94560; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin-bottom: 36px; font-size: 2.5em;">
+            Computer Graphics Assignment Gallery
+        </h1>
+        <div style="display: flex; gap: 32px;">
+            <a href="2d.html" style="
+                padding: 20px 48px;
+                background: linear-gradient(135deg, #0f3460 0%, #e94560 100%);
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                font-size: 1.3em;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                box-shadow: 0 6px 20px rgba(15,52,96,0.22);
+                transition: transform 0.2s, box-shadow 0.2s;
+                text-decoration: none;
+                font-weight: 600;
+                letter-spacing: 1px;
+            " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(233,69,96,0.20)';"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(15,52,96,0.22)';"
+            >Static 2D Scene</a>
+            <a href="3d.html" style="
+                padding: 20px 48px;
+                background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                font-size: 1.3em;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                box-shadow: 0 6px 20px rgba(15,52,96,0.22);
+                transition: transform 0.2s, box-shadow 0.2s;
+                text-decoration: none;
+                font-weight: 600;
+                letter-spacing: 1px;
+            " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(15,52,96,0.30)';"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(15,52,96,0.22)';"
+            >Static 3D Scene</a>
+        </div>
+        <p style="color: #e4e4e4; margin-top: 40px; font-size: 1em; max-width: 540px; text-align: center;">
+            Select either the 2D or 3D scene to view a high-resolution, visually striking rendering built for the CE307 Computer Graphics assignment.
+        </p>
+    </div>
+</body>
+</html>

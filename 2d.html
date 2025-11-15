@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static 2D Scene - Sierpiński Triangle</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 1920px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            border: 2px solid #0f3460;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            background: #0a0a0a;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #e94560 0%, #c9184a 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .info {
+            color: #e4e4e4;
+            margin-top: 25px;
+            text-align: center;
+            max-width: 800px;
+        }
+        .info h3 {
+            color: #e94560;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .details {
+            background: rgba(15, 52, 96, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 1px solid rgba(233, 69, 96, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .details p {
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="glCanvas" width="1920" height="1080"></canvas>
+        <div class="controls">
+            <button onclick="downloadImage()">Download PNG (1920×1080)</button>
+        </div>
+        <div class="info">
+            <h3>2D Fractal Pyramid - Sierpiński Triangle</h3>
+            <div class="details">
+                <p><strong>Type:</strong> Sierpiński Triangle (Fractal Geometry)</p>
+                <p><strong>Triangles:</strong> 27 triangular subdivisions</p>
+                <p><strong>Resolution:</strong> 1920×1080 pixels | Fully responsive design</p>
+                <p><strong>Colors:</strong> Per-level gradient with smooth interpolation</p>
+                <p><strong>Rendering:</strong> Single drawArrays call with WebGL</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Vertex shader program
+        const vsSource = `
+            attribute vec4 aVertexPosition;
+            attribute vec4 aVertexColor;
+            varying lowp vec4 vColor;
+            
+            void main(void) {
+                gl_Position = aVertexPosition;
+                vColor = aVertexColor;
+            }
+        `;
+
+        // Fragment shader program
+        const fsSource = `
+            varying lowp vec4 vColor;
+            
+            void main(void) {
+                gl_FragColor = vColor;
+            }
+        `;
+
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl', { 
+            antialias: true,
+            preserveDrawingBuffer: true 
+        });
+
+        if (!gl) {
+            alert('WebGL not supported');
+        }
+
+        // Initialize shader program
+        function initShaderProgram(gl, vsSource, fsSource) {
+            const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+            const shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
+
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                alert('Shader program initialization failed');
+                return null;
+            }
+
+            return shaderProgram;
+        }
+
+        function loadShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                alert('Shader compilation error: ' + gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+
+            return shader;
+        }
+
+        // Create Sierpiński Triangle with exactly 27 triangles
+        function createSierpinskiTriangle(depth = 3) {
+            const vertices = [];
+            const colors = [];
+
+            // Initial large triangle (pyramid shape)
+            const top = [0.0, 0.7];
+            const left = [-0.7, -0.6];
+            const right = [0.7, -0.6];
+
+            function subdivide(p1, p2, p3, level) {
+                if (level === 0) {
+                    // Add triangle vertices
+                    vertices.push(...p1, ...p2, ...p3);
+
+                    // Color based on depth level
+                    const color = getColorForLevel(depth - level);
+                    for (let i = 0; i < 3; i++) {
+                        colors.push(...color, 1.0);
+                    }
+                } else {
+                    // Calculate midpoints
+                    const mid1 = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+                    const mid2 = [(p2[0] + p3[0]) / 2, (p2[1] + p3[1]) / 2];
+                    const mid3 = [(p3[0] + p1[0]) / 2, (p3[1] + p1[1]) / 2];
+
+                    // Recursively subdivide into 3 smaller triangles
+                    subdivide(p1, mid1, mid3, level - 1);
+                    subdivide(mid1, p2, mid2, level - 1);
+                    subdivide(mid3, mid2, p3, level - 1);
+                }
+            }
+
+            subdivide(top, left, right, depth);
+
+            return { vertices, colors };
+        }
+
+        // Color gradient for different levels
+        function getColorForLevel(level) {
+            const colors = [
+                [1.0, 0.2, 0.2],  // Red
+                [1.0, 0.5, 0.0],  // Orange
+                [1.0, 0.8, 0.0],  // Yellow
+                [0.5, 1.0, 0.5],  // Light Green
+                [0.2, 0.8, 1.0],  // Cyan
+                [0.4, 0.4, 1.0]   // Blue
+            ];
+            return colors[level % colors.length];
+        }
+
+        function render() {
+            const geometry = createSierpinskiTriangle(3);
+            const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+            // Create vertex buffer
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.vertices), gl.STATIC_DRAW);
+
+            // Create color buffer
+            const colorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.colors), gl.STATIC_DRAW);
+
+            // Clear and render
+            gl.clearColor(0.04, 0.04, 0.06, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            gl.useProgram(shaderProgram);
+
+            // Set up position attribute
+            const vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition');
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.vertexAttribPointer(vertexPosition, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(vertexPosition);
+
+            // Set up color attribute
+            const vertexColor = gl.getAttribLocation(shaderProgram, 'aVertexColor');
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.vertexAttribPointer(vertexColor, 4, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(vertexColor);
+
+            // Draw all triangles in one call
+            gl.drawArrays(gl.TRIANGLES, 0, geometry.vertices.length / 2);
+        }
+
+        // Initial render
+        render();
+
+        // Download function
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = '2D_Static_Scene.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Handle window resize for responsiveness
+        window.addEventListener('resize', () => {
+            const container = document.querySelector('.container');
+            const width = Math.min(container.offsetWidth - 40, 1920);
+            const height = (width * 1080) / 1920;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static 3D Scene - Illuminated Pyramid</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 2560px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            border: 2px solid #0f3460;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #e94560 0%, #c9184a 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .info {
+            color: #e4e4e4;
+            margin-top: 25px;
+            max-width: 900px;
+        }
+        .info h3 {
+            color: #e94560;
+            font-size: 24px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .details {
+            background: rgba(15, 52, 96, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 1px solid rgba(233, 69, 96, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .details p {
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="canvas3d"></canvas>
+        <div class="controls">
+            <button onclick="downloadImage()">Download PNG (2560×1440)</button>
+        </div>
+        <div class="info">
+            <h3>3D Illuminated Pyramid Scene</h3>
+            <div class="details">
+                <p><strong>Shape:</strong> Pyramid (Square base, 4 triangular sides)</p>
+                <p><strong>Camera:</strong> Perspective projection | Position: (6, 5, 9) | FOV: 45°</p>
+                <p><strong>Light Source:</strong> Directional Light | Position: (5, 10, 7.5) | Color: White | Intensity: 1.2</p>
+                <p><strong>Material:</strong> Phong shading | Color: Deep Blue | Shininess: 80 | Specular highlights</p>
+                <p><strong>Features:</strong> Real-time shadows, ground plane, responsive design</p>
+                <p><strong>Resolution:</strong> 2560×1440 pixels | Scales to screen</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, pyramid;
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue
+
+            // Camera setup - Perspective projection
+            camera = new THREE.PerspectiveCamera(
+                45,                    // Field of view
+                2560 / 1440,          // Aspect ratio
+                0.1,                   // Near clipping plane
+                1000                   // Far clipping plane
+            );
+            camera.position.set(6, 5, 9);
+            camera.lookAt(0, 2, 0);
+
+            // Renderer setup
+            const canvas = document.getElementById('canvas3d');
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                preserveDrawingBuffer: true
+            });
+            renderer.setSize(2560, 1440);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Create pyramid (cone with 4 sides = square base pyramid)
+            const pyramidGeometry = new THREE.ConeGeometry(2, 4, 4);
+            const pyramidMaterial = new THREE.MeshPhongMaterial({
+                color: 0x2196F3,      // Deep blue
+                shininess: 80,         // High shininess for glossy look
+                specular: 0x444444,   // Specular highlights
+                flatShading: false
+            });
+            pyramid = new THREE.Mesh(pyramidGeometry, pyramidMaterial);
+            pyramid.position.y = 2;
+            pyramid.castShadow = true;
+            pyramid.rotation.y = Math.PI / 4; // Rotate to show square base
+            scene.add(pyramid);
+
+            // Ground plane
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshPhongMaterial({
+                color: 0x3a5f3a,      // Forest green
+                side: THREE.DoubleSide
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = 0;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Ambient light for base illumination
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            // Main directional light source
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight.position.set(5, 10, 7.5);
+            directionalLight.castShadow = true;
+            
+            // Configure shadow properties
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -10;
+            directionalLight.shadow.camera.right = 10;
+            directionalLight.shadow.camera.top = 10;
+            directionalLight.shadow.camera.bottom = -10;
+            scene.add(directionalLight);
+
+            // Hemisphere light for natural look
+            const hemisphereLight = new THREE.HemisphereLight(
+                0xffffff,  // Sky color
+                0x444444,  // Ground color
+                0.3        // Intensity
+            );
+            scene.add(hemisphereLight);
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            onWindowResize();
+
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.querySelector('.container');
+            const width = Math.min(container.offsetWidth - 40, 2560);
+            const height = (width * 1440) / 2560;
+            
+            renderer.domElement.style.width = width + 'px';
+            renderer.domElement.style.height = height + 'px';
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = '3D_Static_Scene.png';
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        // Initialize the scene
+        init();
+
+        console.log('Scene Information:');
+        console.log('Camera Position:', camera.position);
+        console.log('Camera Type: Perspective');
+        console.log('Light Position: (5, 10, 7.5)');
+        console.log('Light Type: Directional');
+        console.log('Pyramid Material: Phong');
+        console.log('Pyramid Color: 0x2196F3 (Deep Blue)');
+    </script>
+</body>
+</html>
