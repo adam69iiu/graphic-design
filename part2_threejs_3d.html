@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Static 3D Scene - Three.js</title>
+  <style>
+    body { 
+      margin: 0; 
+      background: #ffffff; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    canvas { 
+      display: #1A1525; 
+      max-width: 100%;
+      height: auto;
+      image-rendering: auto;
+      image-rendering: -webkit-optimize-contrast;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1A1525);
+
+  const camera = new THREE.PerspectiveCamera(
+    60,
+    2560/1440,
+    0.1,
+    1000
+  );
+  camera.position.set(4, 2, 5);
+  camera.lookAt(0, 0, 0);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 2560;
+  canvas.height = 1440;
+  const renderer = new THREE.WebGLRenderer({ 
+    canvas: canvas,
+    antialias: true,
+    preserveDrawingBuffer: true,  // Required for PNG export
+    powerPreference: "high-performance"
+  });
+  renderer.setSize(2560, 1440);
+  // Don't use devicePixelRatio for display - it makes it too large
+  // Keep internal resolution at 2560x1440, scale with CSS
+  document.querySelector('.container').insertBefore(renderer.domElement, document.querySelector('.container').firstChild);
+  
+  // Make canvas responsive - scale to fit screen while maintaining aspect ratio
+  function resizeCanvas() {
+    const maxWidth = Math.min(window.innerWidth - 40, 2560);
+    const aspectRatio = 2560 / 1440;
+    const displayWidth = maxWidth;
+    const displayHeight = maxWidth / aspectRatio;
+    
+    // Set CSS size for display (internal resolution stays 2560x1440)
+    canvas.style.width = displayWidth + 'px';
+    canvas.style.height = displayHeight + 'px';
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const sphereGeo = new THREE.SphereGeometry(1.2, 32, 32);
+  const material = new THREE.MeshPhongMaterial({ color: 0xD67AD2 });
+  const sphere = new THREE.Mesh(sphereGeo, material);
+  scene.add(sphere);
+
+  const light = new THREE.DirectionalLight(0xFFF2E9, 1);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+
+  const ambient = new THREE.AmbientLight(0x3C1F4A);
+  scene.add(ambient);
+
+  // Bonus: Ground Plane
+  const groundGeo = new THREE.PlaneGeometry(15, 15);
+  const groundMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.set(0, -1 ,0);
+  scene.add(ground);
+
+  renderer.render(scene, camera);
+
+  // PNG Export Function
+  function saveImage() {
+    const link = document.createElement('a');
+    link.download = 'assignment1-part2-3d-scene.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+  window.saveImage = saveImage;
+</script>
+<div style="text-align:center; margin-top:20px;">
+  <button onclick="saveImage()" style="padding:10px 20px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer;">Save as PNG</button>
+</div>
+</div>
+</body>
+</html>

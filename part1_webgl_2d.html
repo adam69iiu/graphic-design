@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Static 2D Scene - WebGL</title>
+  <style>
+    body { 
+      margin: 0; 
+      background: #111; 
+      display: flex; 
+      flex-direction: column;
+      align-items: center; 
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    canvas { 
+      border: 1px solid #333; 
+      max-width: 100%;
+      height: auto;
+      display: block;
+      image-rendering: auto;
+      image-rendering: -webkit-optimize-contrast;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <canvas id="glcanvas" width="1920" height="1080"></canvas>
+
+  <script>
+    const canvas = document.getElementById("glcanvas");
+    const gl = canvas.getContext("webgl", { 
+      antialias: true,
+      preserveDrawingBuffer: true 
+    });
+
+    if (!gl) alert("WebGL not supported");
+    
+    // Set viewport to match canvas size
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    // -------- Vertex Shader --------
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, `
+      attribute vec2 aPos;
+      attribute vec3 aColor;
+      varying vec3 vColor;
+      void main() {
+        gl_Position = vec4(aPos, 0.0, 1.0);
+        vColor = aColor;
+      }
+    `);
+    gl.compileShader(vs);
+
+    // -------- Fragment Shader --------
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, `
+      precision mediump float;
+      varying vec3 vColor;
+      void main() {
+        gl_FragColor = vec4(vColor, 1.0);
+      }
+    `);
+    gl.compileShader(fs);
+
+    // Link program
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    // -------- Geometry (15 colorful triangles - meets 12+ requirement) --------
+    // Format: x, y,   r, g, b
+    const data = new Float32Array([
+      // Triangle 1
+      -0.8, 0.7,  1,0,0,
+      -0.6, 0.9,  1,1,0,
+      -0.4, 0.7,  1,0,1,
+
+      // Triangle 2
+      -0.4, 0.3,  0,1,1,
+      -0.2, 0.5,  0,1,0,
+      0.0, 0.3,   1,1,1,
+
+      // Triangle 3
+      0.2, 0.2,   1,0,0,
+      0.4, 0.4,   0,0,1,
+      0.6, 0.2,   0,1,0,
+
+      // Triangle 4
+      0.1,-0.2,  1,0.5,0,
+      0.3, 0.0,  1,1,0,
+      0.5,-0.2,  1,0,1,
+
+      // Triangle 5
+      -0.6,-0.2, 0,1,1,
+      -0.4, 0.0, 0.6,0,1,
+      -0.2,-0.2, 1,0,0.4,
+
+      // Triangle 6
+      -0.8,-0.6, 1,0,0,
+      -0.6,-0.4, 0,1,0,
+      -0.4,-0.6, 0,0,1,
+
+      // Triangle 7 - Additional triangles to meet 12+ requirement
+      0.6, 0.6,  1,0.5,0,
+      0.8, 0.8,  0,1,0.5,
+      1.0, 0.6,  0.5,0,1,
+
+      // Triangle 8
+      -1.0, 0.5,  0,0.5,1,
+      -0.9, 0.7,  1,0,0.5,
+      -0.8, 0.5,  0.5,1,0,
+
+      // Triangle 9
+      0.7, 0.0,  1,1,0.5,
+      0.9, 0.2,  0.5,1,1,
+      1.0, 0.0,  1,0.5,1,
+
+      // Triangle 10
+      -0.2, -0.4,  0.8,0.2,0.2,
+      -0.1, -0.2,  0.2,0.8,0.2,
+      0.0, -0.4,  0.2,0.2,0.8,
+
+      // Triangle 11
+      0.2, -0.6,  1,0.8,0,
+      0.4, -0.4,  0,1,0.8,
+      0.6, -0.6,  0.8,0,1,
+
+      // Triangle 12
+      -0.4, -0.8,  0.6,0.6,0,
+      -0.2, -0.6,  0,0.6,0.6,
+      0.0, -0.8,  0.6,0,0.6,
+
+      // Triangle 13
+      0.8, -0.2,  1,0,0.8,
+      0.9, 0.0,  0.8,1,0,
+      1.0, -0.2,  0,0.8,1,
+
+      // Triangle 14
+      -0.6, 0.1,  0.4,0.4,1,
+      -0.5, 0.3,  1,0.4,0.4,
+      -0.4, 0.1,  0.4,1,0.4,
+
+      // Triangle 15
+      0.3, 0.8,  1,0.3,0.3,
+      0.5, 1.0,  0.3,1,0.3,
+      0.7, 0.8,  0.3,0.3,1,
+    ]);
+
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+
+    const stride = 5 * 4;
+    const aPos = gl.getAttribLocation(program, "aPos");
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, stride, 0);
+    gl.enableVertexAttribArray(aPos);
+
+    const aColor = gl.getAttribLocation(program, "aColor");
+    gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, stride, 8);
+    gl.enableVertexAttribArray(aColor);
+
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 45); // 15 triangles * 3 vertices = 45
+
+    // Make canvas responsive - scale to fit screen while maintaining aspect ratio
+    function resizeCanvas() {
+      const maxWidth = Math.min(window.innerWidth - 40, 1920);
+      const aspectRatio = 1920 / 1080;
+      const displayWidth = maxWidth;
+      const displayHeight = maxWidth / aspectRatio;
+      
+      // Set CSS size for display
+      canvas.style.width = displayWidth + 'px';
+      canvas.style.height = displayHeight + 'px';
+      
+      // Ensure viewport matches actual canvas size (not CSS size)
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // PNG Export Function
+    function saveImage() {
+      const link = document.createElement('a');
+      link.download = 'assignment1-part1-2d-scene.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    window.saveImage = saveImage;
+  </script>
+  <div style="text-align:center; margin-top:20px;">
+    <button onclick="saveImage()" style="padding:10px 20px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer;">Save as PNG</button>
+  </div>
+  </div>
+</body>
+</html>
